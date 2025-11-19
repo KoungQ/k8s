@@ -1,0 +1,242 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: back-office
+  namespace: back-office
+  labels:
+    app: back-office
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: back-office
+  template:
+    metadata:
+      labels:
+        app: back-office
+    spec:
+      containers:
+      - name: back-office
+        image: back-office:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+          name: http
+        env:
+        # Application
+        - name: SPRING_PROFILES_ACTIVE
+          valueFrom:
+            secretKeyRef:
+              name: back-office-secret
+              key: SPRING_PROFILES_ACTIVE
+        # Database
+        - name: RDB_URL
+          valueFrom:
+            secretKeyRef:
+              name: back-office-secret
+              key: RDB_URL
+        - name: RDB_HOST
+          valueFrom:
+            secretKeyRef:
+              name: back-office-secret
+              key: RDB_HOST
+        - name: RDB_PORT
+          valueFrom:
+            secretKeyRef:
+              name: back-office-secret
+              key: RDB_PORT
+        - name: RDB_DATABASE
+          valueFrom:
+            secretKeyRef:
+              name: back-office-secret
+              key: RDB_DATABASE
+        - name: RDB_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: back-office-secret
+              key: RDB_USERNAME
+        - name: RDB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: back-office-secret
+              key: RDB_PASSWORD
+        - name: RDB_USE_SSL
+          valueFrom:
+            secretKeyRef:
+              name: back-office-secret
+              key: RDB_USE_SSL
+        - name: RDB_TIMEZONE
+          valueFrom:
+            secretKeyRef:
+              name: back-office-secret
+              key: RDB_TIMEZONE
+        # Redis
+        - name: REDIS_HOST
+          valueFrom:
+            secretKeyRef:
+              name: back-office-secret
+              key: REDIS_HOST
+        - name: REDIS_PORT
+          valueFrom:
+            secretKeyRef:
+              name: back-office-secret
+              key: REDIS_PORT
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: back-office-secret
+              key: REDIS_PASSWORD
+        # Kafka
+        - name: KAFKA_BOOTSTRAP_SERVERS
+          valueFrom:
+            secretKeyRef:
+              name: back-office-secret
+              key: KAFKA_BOOTSTRAP_SERVERS
+        - name: KAFKA_PARTITIONS
+          valueFrom:
+            secretKeyRef:
+              name: back-office-secret
+              key: KAFKA_PARTITIONS
+        - name: KAFKA_REPLICAS
+          valueFrom:
+            secretKeyRef:
+              name: back-office-secret
+              key: KAFKA_REPLICAS
+        - name: FAQ_PROCESSING_REQUEST_TOPIC
+          valueFrom:
+            secretKeyRef:
+              name: back-office-secret
+              key: FAQ_PROCESSING_REQUEST_TOPIC
+        - name: FAQ_PROCESSING_RESPONSE_TOPIC
+          valueFrom:
+            secretKeyRef:
+              name: back-office-secret
+              key: FAQ_PROCESSING_RESPONSE_TOPIC
+        - name: FAQ_PROCESSING_GROUP
+          valueFrom:
+            secretKeyRef:
+              name: back-office-secret
+              key: FAQ_PROCESSING_GROUP
+        # AWS S3 (excluded - not needed for local k8s testing)
+        - name: AWS_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: back-office-secret
+              key: AWS_ACCESS_KEY
+        - name: AWS_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: back-office-secret
+              key: AWS_SECRET_KEY
+        - name: AWS_S3_BUCKET_NAME
+          valueFrom:
+            secretKeyRef:
+              name: back-office-secret
+              key: AWS_S3_BUCKET_NAME
+        - name: AWS_S3_REGION
+          valueFrom:
+            secretKeyRef:
+              name: back-office-secret
+              key: AWS_S3_REGION
+        - name: AWS_S3_DURATION
+          valueFrom:
+            secretKeyRef:
+              name: back-office-secret
+              key: AWS_S3_DURATION
+        # JWT
+        - name: JWT_KEY
+          valueFrom:
+            secretKeyRef:
+              name: back-office-secret
+              key: JWT_KEY
+        - name: JWT_ACCESS_EXPIRATION
+          valueFrom:
+            secretKeyRef:
+              name: back-office-secret
+              key: JWT_ACCESS_EXPIRATION
+        - name: JWT_REFRESH_EXPIRATION
+          valueFrom:
+            secretKeyRef:
+              name: back-office-secret
+              key: JWT_REFRESH_EXPIRATION
+        # SMTP
+        - name: SMTP_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: back-office-secret
+              key: SMTP_USERNAME
+        - name: SMTP_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: back-office-secret
+              key: SMTP_PASSWORD
+        - name: SMTP_HOST
+          valueFrom:
+            secretKeyRef:
+              name: back-office-secret
+              key: SMTP_HOST
+        - name: SMTP_PORT
+          valueFrom:
+            secretKeyRef:
+              name: back-office-secret
+              key: SMTP_PORT
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 3
+      initContainers:
+      - name: wait-for-mysql
+        image: busybox:1.36
+        command:
+        - sh
+        - -c
+        - "until nc -z mysql 3306; do echo waiting for mysql; sleep 2; done;"
+      - name: wait-for-redis
+        image: busybox:1.36
+        command:
+        - sh
+        - -c
+        - "until nc -z redis 6379; do echo waiting for redis; sleep 2; done;"
+      # Kafka wait disabled temporarily
+      # - name: wait-for-kafka
+      #   image: busybox:1.36
+      #   command:
+      #   - sh
+      #   - -c
+      #   - "until nc -z kafka 9092; do echo waiting for kafka; sleep 2; done;"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: back-office
+  namespace: back-office
+  labels:
+    app: back-office
+spec:
+  type: NodePort
+  ports:
+  - port: 8080
+    targetPort: 8080
+    protocol: TCP
+    name: http
+    nodePort: 30080
+  selector:
+    app: back-office
+

@@ -1,0 +1,7 @@
+# Secret 파일 (민감한 정보 포함)
+secret.yaml
+
+# 로컬 설정 파일
+*.local.yaml
+*.local.yml
+

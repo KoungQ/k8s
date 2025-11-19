@@ -1,0 +1,52 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: back-office-config
+  namespace: back-office
+data:
+  # Application
+  SPRING_PROFILES_ACTIVE: "prod"
+  APP_PORT: "8080"
+  
+  # Database
+  RDB_HOST: "mysql"
+  RDB_PORT: "3306"
+  RDB_DATABASE: "haezo"
+  RDB_USERNAME: "root"
+  RDB_USE_SSL: "false"
+  RDB_TIMEZONE: "Asia/Seoul"
+  RDB_URL: "jdbc:mysql://mysql:3306/haezo?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8"
+  
+  # Redis
+  REDIS_HOST: "redis"
+  REDIS_PORT: "6379"
+  
+  # Kafka
+  KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+  KAFKA_BROKER_ID: "1"
+  KAFKA_REPLICATION_FACTOR: "1"
+  
+  # Zookeeper
+  ZOOKEEPER_PORT: "2181"
+  ZOOKEEPER_TICK_TIME: "2000"
+  
+  # SMTP
+  SMTP_HOST: "smtp.gmail.com"
+  SMTP_PORT: "587"
+  
+  # AWS S3
+  AWS_S3_REGION: "ap-northeast-2"
+  AWS_S3_DURATION: "5"
+  
+  # JWT
+  JWT_ACCESS_EXPIRATION: "360000"
+  JWT_REFRESH_EXPIRATION: "360000"
+  
+  # Loki
+  LOKI_HTTP_LISTEN_PORT: "3100"
+  LOKI_GRPC_LISTEN_PORT: "9096"
+  
+  # Grafana
+  GRAFANA_ADMIN_USER: "admin"
+  GRAFANA_ROOT_URL: "http://localhost:3000"
+
